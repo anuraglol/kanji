@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Upload } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
@@ -54,12 +54,6 @@ function App() {
 
   return (
     <div className="flex min-h-svh w-full flex-col items-center justify-center gap-3 px-4 py-6 sm:p-6">
-      <Link
-        to="/history"
-        className="underline text-muted-foreground hover:text-white transition-all duration-75"
-      >
-        /history
-      </Link>
       <p className="max-w-xl text-center text-sm text-muted-foreground sm:text-[15px] xl:max-w-2xl">
         hi! this is a simple local-only image conversion tool built using wasm. it uses{" "}
         <span className="italic">imagemagick</span> under the hood, along with{" "}

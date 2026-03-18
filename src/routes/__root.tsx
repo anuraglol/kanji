@@ -8,6 +8,7 @@ import appCss from "../styles.css?url";
 
 import type { QueryClient } from "@tanstack/react-query";
 import { Toaster } from "sonner";
+import { Nav } from "@/components/nav";
 
 interface MyRouterContext {
   queryClient: QueryClient;
@@ -47,6 +48,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        <Nav />
         <Toaster />
         <TanStackQueryProvider>
           {children}
