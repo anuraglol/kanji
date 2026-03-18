@@ -13,19 +13,15 @@ function RouteComponent() {
     queryFn: () => filesStore.getAll(),
   });
 
-  return (
-    <div className="flex min-h-svh w-full flex-col items-center justify-center gap-3 px-4 py-6 sm:p-6">
-      {isLoading ? (
-        <p className="text-muted-foreground">Loading...</p>
-      ) : data && data.length > 0 ? (
-        <div className="flex w-full max-w-lg flex-col gap-2 xl:max-w-xl">
-          {data.map((file) => (
-            <FileItem key={file.id} file={file} url={URL.createObjectURL(file.data)} />
-          ))}
-        </div>
-      ) : (
-        <p className="text-muted-foreground">uh oh! you've no files uploaded</p>
-      )}
+  return isLoading ? (
+    <p className="text-muted-foreground">Loading...</p>
+  ) : data && data.length > 0 ? (
+    <div className="flex w-full max-w-lg flex-col gap-2 xl:max-w-xl">
+      {data.map((file) => (
+        <FileItem key={file.id} file={file} url={URL.createObjectURL(file.data)} />
+      ))}
     </div>
+  ) : (
+    <p className="text-muted-foreground">uh oh! you've no files uploaded</p>
   );
 }

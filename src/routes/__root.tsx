@@ -47,7 +47,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
-      <body className="min-h-svh flex flex-col">
+      <body className="flex min-h-svh w-full flex-col items-center justify-center gap-3 px-4 py-6 sm:p-6">
         <Nav />
         <Toaster />
         <TanStackQueryProvider>
