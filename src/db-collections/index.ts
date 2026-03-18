@@ -1,18 +1,22 @@
-import { createCollection, localOnlyCollectionOptions } from "@tanstack/react-db";
+import { createCollection, localStorageCollectionOptions } from "@tanstack/react-db";
 import { z } from "zod";
 
 const FileSchema = z.object({
   name: z.string(),
   size: z.number(),
   type: z.string(),
-  bytes: z.instanceof(Uint8Array),
+  lastModified: z.number(),
+  data: z.string(),
+  id: z.string(),
 });
 
-export type FileRecord = z.infer<typeof FileSchema>;
+export type FileItem = z.infer<typeof FileSchema>;
 
-export const fileCollection = createCollection(
-  localOnlyCollectionOptions({
-    getKey: (file) => file.name,
+export const filesCollection = createCollection(
+  localStorageCollectionOptions({
+    id: "files",
+    storageKey: "app-files",
+    getKey: (item) => item.id,
     schema: FileSchema,
   }),
 );

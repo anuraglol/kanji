@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Upload } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
@@ -54,6 +54,12 @@ function App() {
 
   return (
     <div className="flex flex-col gap-3 min-h-svh p-6 items-center justify-center">
+      <Link
+        to="/history"
+        className="underline text-muted-foreground hover:text-white transition-all duration-75"
+      >
+        /history
+      </Link>
       <FileUpload
         maxSize={5 * 1024 * 1024}
         className="w-full max-w-md"

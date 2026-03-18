@@ -12,8 +12,9 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { convertImage } from "@/lib/convert";
-import { IMAGE_TYPES } from "@/lib/utils";
+import { downloadFile, formatFileName, IMAGE_TYPES } from "@/lib/utils";
 
+import { filesCollection } from "@/db-collections";
 import { Button } from "./ui/button";
 
 type FileHandlerItemData = {
@@ -67,6 +68,20 @@ export function FileHandlerItem({
       const outBytes = await convertImage(srcBytes, selectedType);
       const outView = new Uint8Array(outBytes);
       const outBlob = new Blob([outView], { type: outputMime });
+
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(outBlob);
+      });
+      filesCollection.insert({
+        id: crypto.randomUUID(),
+        name: file.name.split(".").slice(0, -1).join(".") + `.${selectedType}`,
+        size: outBlob.size,
+        type: outputMime,
+        lastModified: Date.now(),
+        data: base64,
+      });
       return URL.createObjectURL(outBlob);
     },
     onSuccess: () => {
@@ -78,25 +93,12 @@ export function FileHandlerItem({
     },
   });
 
-  React.useEffect(() => {
-    return () => {
-      if (data) URL.revokeObjectURL(data);
-    };
-  }, [data]);
-
   const { mutate: downloadHandler, isPending: isDownloading } = useMutation({
     mutationKey: ["download-image", file.id],
-    mutationFn: async (href: string) => {
-      if (!href) {
-        toast.error("No data to download");
-        return;
-      }
-      const link = document.createElement("a");
-      link.href = href;
-      link.download = file.name.split(".").slice(0, -1).join(".") + `.${selectedType}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    mutationFn: async (href: string) => await downloadFile(href, file.name),
+    onError: (err) => {
+      const message = err instanceof Error ? err.message : "Failed to download image";
+      toast.error(message);
     },
   });
 
@@ -106,7 +108,7 @@ export function FileHandlerItem({
         <img src={file.url} alt={file.name} className="size-36 rounded-xs object-cover" />
 
         <div className="text-[13px] font-medium flex flex-col gap-2">
-          {file.name.length > 30 ? file.name.slice(0, 27) + "..." : file.name}
+          {formatFileName(file.name)}
           <p className="text-[11px] text-muted-foreground">{formattedSize(file.size)}</p>
           <div className="flex items-center gap-2">
             <Select

@@ -46,3 +46,27 @@ export const urlToBase64 = async (url: string) => {
     reader.readAsDataURL(blob);
   });
 };
+
+export const formatFileName = (name: string) => {
+  if (name.length <= 30) return name;
+
+  const extIndex = name.lastIndexOf(".");
+  const ext = extIndex !== -1 ? name.slice(extIndex) : "";
+  const baseName = name.slice(0, extIndex);
+  const truncatedBase = baseName.length > 27 ? baseName.slice(0, 27) + "..." : baseName;
+
+  return truncatedBase + ext;
+};
+
+export const downloadFile = async (data: string, name: string) => {
+  const response = await fetch(data);
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
