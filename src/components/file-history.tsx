@@ -7,9 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 
-export function FileItem({ file }: { file: FileItemType }) {
-  const [url, setUrl] = React.useState<string | null>(null);
-
+export function FileItem({ file, url }: { file: FileItemType; url: string }) {
   const formattedSize = React.useCallback((size: number) => {
     if (size < 1024) return `${size} B`;
     if (size < 1024 * 1024) return `${(size / 1024).toFixed(2)} KB`;
@@ -18,11 +16,8 @@ export function FileItem({ file }: { file: FileItemType }) {
   }, []);
 
   React.useEffect(() => {
-    const objectUrl = URL.createObjectURL(file.data);
-    setUrl(objectUrl);
-
     return () => {
-      URL.revokeObjectURL(objectUrl);
+      URL.revokeObjectURL(url);
     };
   }, [file.data]);
 
