@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DownloadIcon, RotateCw, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -14,8 +14,9 @@ import {
 import { convertImage } from "@/lib/convert";
 import { downloadFile, formatFileName, IMAGE_TYPES } from "@/lib/utils";
 
-import { filesCollection } from "@/db-collections";
+import { filesStore } from "@/db-collections";
 import { Button } from "./ui/button";
+import { useRouteContext } from "@tanstack/react-router";
 
 type FileHandlerItemData = {
   id: string;
@@ -34,6 +35,8 @@ export function FileHandlerItem({
 }) {
   const [selectedType, setSelectedType] = React.useState<IMAGE_TYPES>("png");
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+
+  const queryClient = useQueryClient();
 
   const outputMime = React.useMemo(() => {
     const map: Partial<Record<IMAGE_TYPES, string>> = {
@@ -76,7 +79,7 @@ export function FileHandlerItem({
       const outView = new Uint8Array(outBytes);
       const outBlob = new Blob([outView], { type: outputMime });
 
-      filesCollection.insert({
+      filesStore.insert({
         id: crypto.randomUUID(),
         name: file.name.split(".").slice(0, -1).join(".") + `.${selectedType}`,
         size: outBlob.size,
@@ -87,6 +90,7 @@ export function FileHandlerItem({
 
       const url = URL.createObjectURL(outBlob);
       setPreviewUrl(url);
+      queryClient.invalidateQueries({ queryKey: ["files", "indexeds"] });
 
       return {
         url,

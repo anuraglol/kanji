@@ -1,6 +1,6 @@
 import { FileItem } from "@/components/file-history";
-import { filesCollection } from "@/db-collections";
-import { useLiveQuery } from "@tanstack/react-db";
+import { filesStore } from "@/db-collections";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/history")({
@@ -9,7 +9,10 @@ export const Route = createFileRoute("/history")({
 });
 
 function RouteComponent() {
-  const { data, isLoading } = useLiveQuery(filesCollection);
+  const { data, isLoading } = useQuery({
+    queryKey: ["files", "indexed"],
+    queryFn: () => filesStore.getAll(),
+  });
 
   return (
     <div className="flex flex-col gap-3 min-h-svh p-6 items-center justify-center">

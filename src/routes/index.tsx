@@ -63,7 +63,7 @@ function App() {
       <p className="text-muted-foreground text-[15px] max-w-xl text-center">
         this is a simple local-only image conversion tool built using wasm. it uses{" "}
         <span className="italic">imagemagick</span> under the hood, along with{" "}
-        <span className="italic">tanstack/db</span> for synced local state management. <br />
+        <span className="italic">indexed-db</span> for synced local state management. <br />
         upload files in the below area to proceed.
       </p>
       <FileUpload

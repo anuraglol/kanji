@@ -1,13 +1,14 @@
 import { DownloadIcon, X } from "lucide-react";
 import * as React from "react";
 
-import { filesCollection, type FileItem as FileItemType } from "@/db-collections";
+import { filesStore, type FileItem as FileItemType } from "@/db-collections";
 import { downloadFile, formatFileName } from "@/lib/utils";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 
 export function FileItem({ file, url }: { file: FileItemType; url: string }) {
+  const queryClient = useQueryClient();
   const formattedSize = React.useCallback((size: number) => {
     if (size < 1024) return `${size} B`;
     if (size < 1024 * 1024) return `${(size / 1024).toFixed(2)} KB`;
@@ -70,7 +71,8 @@ export function FileItem({ file, url }: { file: FileItemType; url: string }) {
           size="icon"
           className="size-7"
           onClick={() => {
-            filesCollection.delete(file.id);
+            filesStore.delete(file.id);
+            queryClient.invalidateQueries({ queryKey: ["files", "indexed"] });
             toast.success("File deleted successfully");
           }}
         >

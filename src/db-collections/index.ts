@@ -1,4 +1,4 @@
-import { createCollection, localStorageCollectionOptions } from "@tanstack/react-db";
+import { set, del, entries } from "idb-keyval";
 import { z } from "zod";
 
 const FileSchema = z.object({
@@ -12,11 +12,8 @@ const FileSchema = z.object({
 
 export type FileItem = z.infer<typeof FileSchema>;
 
-export const filesCollection = createCollection(
-  localStorageCollectionOptions({
-    id: "files",
-    storageKey: "app-files",
-    getKey: (item) => item.id,
-    schema: FileSchema,
-  }),
-);
+export const filesStore = {
+  getAll: (): Promise<FileItem[]> => entries<string, FileItem>().then((e) => e.map(([, v]) => v)),
+  insert: (item: FileItem) => set(item.id, item),
+  delete: (id: string) => del(id),
+};
