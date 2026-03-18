@@ -6,7 +6,7 @@ const FileSchema = z.object({
   size: z.number(),
   type: z.string(),
   lastModified: z.number(),
-  data: z.string(),
+  data: z.instanceof(Blob),
   id: z.string(),
 });
 

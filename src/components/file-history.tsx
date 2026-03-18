@@ -1,12 +1,15 @@
 import { DownloadIcon, X } from "lucide-react";
 import * as React from "react";
 
-import { filesCollection, type FileItem } from "@/db-collections";
-import { Button } from "./ui/button";
+import { filesCollection, type FileItem as FileItemType } from "@/db-collections";
 import { downloadFile, formatFileName } from "@/lib/utils";
 import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Button } from "./ui/button";
 
-export function FileItem({ file }: { file: FileItem }) {
+export function FileItem({ file }: { file: FileItemType }) {
+  const [url, setUrl] = React.useState<string | null>(null);
+
   const formattedSize = React.useCallback((size: number) => {
     if (size < 1024) return `${size} B`;
     if (size < 1024 * 1024) return `${(size / 1024).toFixed(2)} KB`;
@@ -14,23 +17,40 @@ export function FileItem({ file }: { file: FileItem }) {
     return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   }, []);
 
+  React.useEffect(() => {
+    const objectUrl = URL.createObjectURL(file.data);
+    setUrl(objectUrl);
+
+    return () => {
+      URL.revokeObjectURL(objectUrl);
+    };
+  }, [file.data]);
+
   const { mutate, isPending } = useMutation({
     mutationFn: async () => await downloadFile(file.data, file.name),
+    onError: (err) => {
+      const message = err instanceof Error ? err.message : "Failed to download image";
+      toast.error(message);
+    },
   });
 
   return (
     <div className="w-full p-3 rounded-md border-border border flex justify-between items-center">
       <div className="flex items-center gap-3">
-        <img src={file.data} alt={file.name} className="size-36 rounded-xs object-cover" />
+        <img src={url ?? ""} alt={file.name} className="size-36 rounded-xs object-cover" />
 
         <div className="text-[13px] font-medium flex flex-col">
           {formatFileName(file.name)}
+
           <p className="text-[11px] text-muted-foreground">
-            {formattedSize(file.size)}, {file.type.split("/")[1].toUpperCase()}
+            {formattedSize(file.size)}, {file.type.split("/")[1]?.toUpperCase()}
           </p>
+
           <p className="text-[11px] text-muted-foreground">
             {new Date(file.lastModified).getDate()}{" "}
-            {new Date(file.lastModified).toLocaleString("default", { month: "short" })}{" "}
+            {new Date(file.lastModified).toLocaleString("default", {
+              month: "short",
+            })}{" "}
             {new Date(file.lastModified).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
@@ -56,6 +76,7 @@ export function FileItem({ file }: { file: FileItem }) {
           className="size-7"
           onClick={() => {
             filesCollection.delete(file.id);
+            toast.success("File deleted successfully");
           }}
         >
           <X className="size-4" />

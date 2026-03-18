@@ -60,8 +60,14 @@ function App() {
       >
         /history
       </Link>
+      <p className="text-muted-foreground text-[15px] max-w-xl text-center">
+        this is a simple local-only image conversion tool built using wasm. it uses{" "}
+        <span className="italic">imagemagick</span> under the hood, along with{" "}
+        <span className="italic">tanstack/db</span> for synced local state management. <br />
+        upload files in the below area to proceed.
+      </p>
       <FileUpload
-        maxSize={5 * 1024 * 1024}
+        maxSize={50 * 1024 * 1024}
         className="w-full max-w-md"
         value={items.map((i) => i.file)}
         onValueChange={onFilesChange}
@@ -75,7 +81,9 @@ function App() {
               <Upload className="size-6 text-muted-foreground" />
             </div>
             <p className="text-sm font-medium">Drag & drop images here</p>
-            <p className="text-xs text-muted-foreground">Or click to browse (5mb each)</p>
+            <p className="text-xs text-muted-foreground">
+              Or click to browse (each image{" <"}50mb)
+            </p>
           </div>
           <FileUploadTrigger asChild>
             <Button variant="outline" size="sm" className="mt-2 w-fit">

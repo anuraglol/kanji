@@ -33,6 +33,7 @@ export function FileHandlerItem({
   removeFile: (id: string) => void;
 }) {
   const [selectedType, setSelectedType] = React.useState<IMAGE_TYPES>("png");
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
 
   const outputMime = React.useMemo(() => {
     const map: Partial<Record<IMAGE_TYPES, string>> = {
@@ -61,6 +62,12 @@ export function FileHandlerItem({
     return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   }, []);
 
+  React.useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
   const { mutate, isPending, data } = useMutation({
     mutationKey: ["convert-image", file.id],
     mutationFn: async () => {
@@ -69,20 +76,22 @@ export function FileHandlerItem({
       const outView = new Uint8Array(outBytes);
       const outBlob = new Blob([outView], { type: outputMime });
 
-      const base64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(outBlob);
-      });
       filesCollection.insert({
         id: crypto.randomUUID(),
         name: file.name.split(".").slice(0, -1).join(".") + `.${selectedType}`,
         size: outBlob.size,
         type: outputMime,
         lastModified: Date.now(),
-        data: base64,
+        data: outBlob,
       });
-      return URL.createObjectURL(outBlob);
+
+      const url = URL.createObjectURL(outBlob);
+      setPreviewUrl(url);
+
+      return {
+        url,
+        blob: outBlob,
+      };
     },
     onSuccess: () => {
       toast.success("Image converted successfully!");
@@ -95,7 +104,8 @@ export function FileHandlerItem({
 
   const { mutate: downloadHandler, isPending: isDownloading } = useMutation({
     mutationKey: ["download-image", file.id],
-    mutationFn: async (href: string) => await downloadFile(href, file.name),
+    mutationFn: async (blob: Blob) =>
+      await downloadFile(blob, file.name.split(".").slice(0, -1).join(".") + `.${selectedType}`),
     onError: (err) => {
       const message = err instanceof Error ? err.message : "Failed to download image";
       toast.error(message);
@@ -105,48 +115,55 @@ export function FileHandlerItem({
   return (
     <div className="w-full p-3 rounded-md border-border border flex justify-between items-center">
       <div className="flex items-center gap-3">
-        <img src={file.url} alt={file.name} className="size-36 rounded-xs object-cover" />
+        <img
+          src={data?.url ?? file.url}
+          alt={file.name}
+          className="size-36 rounded-xs object-cover"
+        />
 
         <div className="text-[13px] font-medium flex flex-col gap-2">
           {formatFileName(file.name)}
           <p className="text-[11px] text-muted-foreground">{formattedSize(file.size)}</p>
-          <div className="flex items-center gap-2">
-            <Select
-              value={selectedType}
-              onValueChange={(value) => setSelectedType(value as IMAGE_TYPES)}
-            >
-              <SelectTrigger className="w-24">{selectedType.toUpperCase()}</SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {IMAGE_TYPES.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type.toUpperCase()}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+
+          <div className="w-full flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <Select
+                value={selectedType}
+                onValueChange={(value) => setSelectedType(value as IMAGE_TYPES)}
+              >
+                <SelectTrigger className="w-24">{selectedType.toUpperCase()}</SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {IMAGE_TYPES.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type.toUpperCase()}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+
+              <Button
+                className="w-28"
+                onClick={() => mutate()}
+                disabled={isPending}
+                variant="outline"
+              >
+                <RotateCw className="size-4" data-icon="inline-start" />
+                Convert
+              </Button>
+            </div>
 
             <Button
-              className="w-28"
-              onClick={() => mutate()}
-              disabled={isPending}
+              className="w-full"
+              onClick={() => data && downloadHandler(data.blob)}
+              disabled={isDownloading || !data}
               variant="outline"
             >
-              <RotateCw className="size-4" data-icon="inline-start" />
-              Convert
+              <DownloadIcon className="size-4" data-icon="inline-start" />
+              Download
             </Button>
           </div>
-
-          <Button
-            className="w-full"
-            onClick={() => downloadHandler(data!)}
-            disabled={isDownloading || !data}
-            variant="outline"
-          >
-            <DownloadIcon className="size-4" data-icon="inline-start" />
-            Download
-          </Button>
         </div>
       </div>
 
