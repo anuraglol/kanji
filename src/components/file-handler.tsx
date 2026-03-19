@@ -12,10 +12,19 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { convertImage } from "@/lib/convert";
-import { downloadFile, formatFileName, IMAGE_TYPES } from "@/lib/utils";
+import {
+  canRead,
+  canWrite,
+  downloadFile,
+  FORMAT_CAPS,
+  formatFileName,
+  getValidOutputs,
+  IMAGE_TYPES,
+} from "@/lib/utils";
 
 import { filesStore } from "@/db-collections";
 import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 
 type FileHandlerItemData = {
   id: string;
@@ -64,6 +73,15 @@ export function FileHandlerItem({
     return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   }, []);
 
+  const srcType = React.useMemo<IMAGE_TYPES>(() => {
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    return (IMAGE_TYPES as readonly string[]).includes(ext || "") ? (ext as IMAGE_TYPES) : "png";
+  }, [file.name]);
+
+  const allowedOutputs = React.useMemo(() => {
+    return getValidOutputs(srcType);
+  }, [srcType]);
+
   React.useEffect(() => {
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -73,6 +91,13 @@ export function FileHandlerItem({
   const { mutate, isPending, data } = useMutation({
     mutationKey: ["convert-image", file.id],
     mutationFn: async () => {
+      if (!canRead(srcType)) {
+        throw new Error(`${srcType} not supported in browser`);
+      }
+      if (!canWrite(selectedType)) {
+        throw new Error(`${selectedType} cannot be used as output`);
+      }
+
       const srcBytes = new Uint8Array(await file.file.arrayBuffer());
       const outBytes = await convertImage(srcBytes, selectedType);
       const outView = new Uint8Array(outBytes);
@@ -88,7 +113,6 @@ export function FileHandlerItem({
       });
 
       const url = URL.createObjectURL(outBlob);
-      setPreviewUrl(url);
       queryClient.invalidateQueries({ queryKey: ["files", "indexeds"] });
 
       return {
@@ -115,12 +139,20 @@ export function FileHandlerItem({
     },
   });
 
+  const getFormatBadge = (type: IMAGE_TYPES) => {
+    const caps = FORMAT_CAPS[type];
+
+    if (!caps.read && !caps.write) return { label: "UNSUPPORTED", variant: "destructive" };
+    if (caps.read && !caps.write) return { label: "READ ONLY", variant: "secondary" };
+    return null;
+  };
+
   return (
     <div className="w-full rounded-md border border-border p-3">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           <img
-            src={data?.url ?? file.url}
+            src={file.url}
             alt={file.name}
             className="h-20 w-20 shrink-0 rounded-xs object-cover sm:h-28 sm:w-28"
           />
@@ -142,11 +174,27 @@ export function FileHandlerItem({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      {IMAGE_TYPES.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type.toUpperCase()}
-                        </SelectItem>
-                      ))}
+                      {IMAGE_TYPES.map((type) => {
+                        const disabled = !allowedOutputs.includes(type);
+                        const badge = getFormatBadge(type);
+
+                        return (
+                          <SelectItem key={type} value={type} disabled={disabled}>
+                            <div className="flex w-full items-center justify-between gap-2">
+                              <span>{type.toUpperCase()}</span>
+
+                              {badge ? (
+                                <Badge
+                                  variant={badge.variant as any}
+                                  className="text-[10px] px-1.5 py-0"
+                                >
+                                  {badge.label}
+                                </Badge>
+                              ) : null}
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
                     </SelectGroup>
                   </SelectContent>
                 </Select>

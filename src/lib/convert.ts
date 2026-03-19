@@ -1,4 +1,5 @@
 import { initializeImageMagick, ImageMagick, MagickFormat } from "@imagemagick/magick-wasm";
+import type { IMAGE_TYPES } from "./utils";
 
 let initialized = false;
 let initPromise: Promise<void> | null = null;
@@ -25,12 +26,23 @@ async function init() {
 export async function convertImage(srcBytes: Uint8Array, dstType: string): Promise<Uint8Array> {
   await init();
 
-  const fmtKey = dstType.toUpperCase();
-  console.log("Converting to format:", fmtKey);
-  const fmt = (MagickFormat as Record<string, MagickFormat | undefined>)[fmtKey];
-  // if (fmt == null) {
-  //   throw new Error(`Unsupported output format: ${dstType}`);
-  // }
+  const FORMAT_MAP: Partial<Record<IMAGE_TYPES, MagickFormat>> = {
+    jpeg: MagickFormat.Jpeg,
+    png: MagickFormat.Png,
+    bmp: MagickFormat.Bmp,
+    gif: MagickFormat.Gif,
+    tiff: MagickFormat.Tiff,
+    webp: MagickFormat.WebP,
+    avif: MagickFormat.Avif,
+    jp2: MagickFormat.Jp2,
+    ico: MagickFormat.Ico,
+  };
+
+  const fmt = FORMAT_MAP[dstType as IMAGE_TYPES];
+
+  if (!fmt) {
+    throw new Error(`Format ${dstType} not supported by Magick WASM`);
+  }
 
   return new Promise<Uint8Array>((resolve, reject) => {
     try {

@@ -69,3 +69,31 @@ export const downloadFile = async (blob: Blob, filename: string) => {
 
   URL.revokeObjectURL(url);
 };
+
+export const FORMAT_CAPS = {
+  jpeg: { read: true, write: true },
+  png: { read: true, write: true },
+  bmp: { read: true, write: true },
+  gif: { read: true, write: true },
+  tiff: { read: true, write: true },
+  webp: { read: true, write: true },
+  avif: { read: true, write: true },
+  jp2: { read: true, write: true },
+  ico: { read: true, write: true },
+
+  svg: { read: true, write: false },
+  pdf: { read: true, write: false },
+  psd: { read: true, write: false },
+
+  heic: { read: false, write: false },
+  jxl: { read: false, write: false },
+} as const;
+
+export const canRead = (type: IMAGE_TYPES) => FORMAT_CAPS[type]?.read;
+export const canWrite = (type: IMAGE_TYPES) => FORMAT_CAPS[type]?.write;
+
+export const getValidOutputs = (src: IMAGE_TYPES) => {
+  if (!canRead(src)) return [];
+
+  return IMAGE_TYPES.filter((t) => canWrite(t));
+};

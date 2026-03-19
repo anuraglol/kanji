@@ -6,7 +6,6 @@ import { toast } from "sonner";
 
 import { FileHandlerItem } from "@/components/file-handler";
 import { FileUpload, FileUploadDropzone, FileUploadTrigger } from "../components/ui/file-upload";
-import { Nav } from "@/components/nav";
 
 export const Route = createFileRoute("/")({ component: App });
 
@@ -55,7 +54,7 @@ function App() {
 
   return (
     <>
-      <p className="max-w-xl text-center text-sm text-muted-foreground sm:text-[15px] xl:max-w-2xl">
+      <p className="max-w-xl text-center text-sm text-muted-foreground sm:text-base xl:max-w-2xl">
         hi! this is a simple local-only image conversion tool built using wasm. it uses{" "}
         <span className="italic">imagemagick</span> under the hood, along with{" "}
         <span className="italic">indexed-db</span> for synced local state management. <br />

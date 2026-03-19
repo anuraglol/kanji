@@ -22,6 +22,6 @@ function RouteComponent() {
       ))}
     </div>
   ) : (
-    <p className="text-muted-foreground">uh oh! you've no files uploaded</p>
+    <p className="text-muted-foreground text-sm sm:text-base">uh oh! you've no files uploaded</p>
   );
 }

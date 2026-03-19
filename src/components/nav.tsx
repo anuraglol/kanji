@@ -5,12 +5,13 @@ export const Nav = () => {
   const uri = pathname === "/history" ? "/" : "/history";
 
   return (
-    <div className="flex flex-col mt-6 w-full text-center">
+    <div className="flex flex-col mt-6 w-full items-center">
+      <img src="/1.gif" alt="Animated Kanji GIF" className="w-12 animate-[bounce_0.75s_infinite]" />
       <p className="text-xl font-medium">kanji</p>
 
       <Link
         to={uri}
-        className="underline text-muted-foreground hover:text-white transition-all duration-75"
+        className="underline text-muted-foreground hover:text-foreground transition-all duration-75"
       >
         /{pathname === "/history" ? "index" : "history"}
       </Link>
@@ -19,7 +20,7 @@ export const Nav = () => {
         href="https://github.com/anuraglol/kanji"
         target="_blank"
         rel="noopener noreferrer"
-        className="underline text-muted-foreground hover:text-white transition-all duration-75"
+        className="underline text-muted-foreground hover:text-foreground transition-all duration-75"
       >
         source-code
       </a>
